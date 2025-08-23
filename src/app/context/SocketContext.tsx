@@ -79,7 +79,7 @@
 
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
 
@@ -119,7 +119,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         setSocket(null);
       }
     }
-  }, [session]);
+  }, [session, socket]);
 
   return (
     <SocketContext.Provider value={{ socket, onlineUsers }}>

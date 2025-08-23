@@ -957,7 +957,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Edit3, Save, Camera, Image as ImageIcon, Video, FileText } from "lucide-react";
 import { PostDetailModal } from '@/components/posts/PostDetailModal'; // Import the modal component
-
+import Image from "next/image";
 // --- TYPE INTERFACES ---
 
 interface Post {
@@ -967,7 +967,7 @@ interface Post {
   video?: string;
   createdAt: string;
   // Add other fields needed for the modal, assuming they are populated by the API
-  author: any;
+  author: { _id: string; name: string; username: string; profileImage?: string; };
   likes: string[];
   savedBy: string[];
 }
@@ -1012,7 +1012,17 @@ const PostCard = ({ post, onClick }: { post: Post, onClick: () => void }) => {
         {postType === 'video' && <Video className="w-4 h-4 text-white" />}
       </div>
       <div className="aspect-square w-full overflow-hidden bg-gray-100">
-        {post.photo && <img src={post.photo} alt="Post content" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />}
+{post.photo && (
+  <div className="relative w-full h-full">
+    <Image
+      src={post.photo}
+      alt="Post content"
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      className="object-cover group-hover:scale-105 transition-transform duration-300"
+    />
+  </div>
+)}
         {post.video && <div className="w-full h-full flex items-center justify-center"><Video className="w-16 h-16 text-gray-400" /></div>}
       </div>
       {post.text && <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4"><p className="text-white text-center text-sm">{post.text}</p></div>}
@@ -1096,7 +1106,53 @@ export default function ProfilePage() {
   const handleInterestToggle = (interest: string) => { setFormData((prev) => ({ ...prev, interests: prev.interests.includes(interest) ? prev.interests.filter((i) => i !== interest) : [...prev.interests, interest] })); };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) { setNewImageFile(file); setImagePreview(URL.createObjectURL(file)); } };
   const handleImageUpload = async () => { if (!newImageFile) return ''; try { const authRes = await fetch('/api/imagekit-auth'); if (!authRes.ok) throw new Error("Failed to authenticate with ImageKit"); const authParams = await authRes.json(); const response = await upload({ file: newImageFile, fileName: newImageFile.name, ...authParams, }); return response.url; } catch (error) { console.error("Image upload failed:", error); toast.error("Image upload failed. Please try again."); return ''; } };
-  const handleSave = async () => { if (!profile) return; setIsSaving(true); try { let updatedProfileImageUrl = profile.profileImage; if (newImageFile) { const uploadedUrl = await handleImageUpload(); if (uploadedUrl) { updatedProfileImageUrl = uploadedUrl; } else { setIsSaving(false); return; } } const finalFormData = { ...formData, profileImage: updatedProfileImageUrl, }; const res = await fetch(`/api/users/${profile._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalFormData), }); const result = await res.json(); if (!res.ok) { throw new Error(result.message || 'Failed to update profile.'); } const updatedUser: ProfileUser = result.data; setProfile(updatedUser); setNewImageFile(null); setImagePreview(null); await update({ ...session, user: { ...session?.user, name: updatedUser.name, username: updatedUser.username, image: updatedUser.profileImage, }, }); toast.success("Profile updated successfully!"); setIsEditing(false); } catch (error: any) { console.error(error); toast.error(error.message || "An error occurred while saving."); } finally { setIsSaving(false); } };
+  const handleSave = async () => { 
+    if (!profile) return; 
+    setIsSaving(true); 
+    try { 
+      let updatedProfileImageUrl = profile.profileImage; 
+      if (newImageFile) { 
+        const uploadedUrl = await handleImageUpload(); 
+        if (uploadedUrl) { 
+          updatedProfileImageUrl = uploadedUrl; 
+        } else { 
+          setIsSaving(false); 
+          return; 
+        } 
+      } 
+      const finalFormData = { ...formData, profileImage: updatedProfileImageUrl, }; 
+      const res = await fetch(`/api/users/${profile._id}`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(finalFormData), 
+      }); 
+      const result = await res.json(); 
+      if (!res.ok) { 
+        throw new Error(result.message || 'Failed to update profile.'); 
+      } 
+      const updatedUser: ProfileUser = result.data; 
+      setProfile(updatedUser); 
+      setNewImageFile(null); 
+      setImagePreview(null); 
+      await update({ 
+        ...session, 
+        user: { 
+          ...session?.user, 
+          name: updatedUser.name, 
+          username: updatedUser.username, 
+          image: updatedUser.profileImage, 
+        }, 
+      }); 
+      toast.success("Profile updated successfully!"); 
+      setIsEditing(false); 
+    } catch (error: unknown) { 
+      const errorMessage = error instanceof Error ? error.message : "An error occurred while saving.";
+      console.error(error); 
+      toast.error(errorMessage); 
+    } finally { 
+      setIsSaving(false); 
+    } 
+  };
   const handleCancel = () => { if (profile) { setFormData({ name: profile.name, username: profile.username, bio: profile.bio, interests: profile.interests, }); } setNewImageFile(null); setImagePreview(null); setIsEditing(false); };
 
   if (status === "loading" || isLoading) {
@@ -1115,7 +1171,7 @@ export default function ProfilePage() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="relative">
-              <img src={displayImage} alt="Profile" className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-primary" />
+              <Image src={displayImage} alt="Profile" className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-primary" />
               {isEditing && (<> <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" /> <Button variant="outline" size="icon" className="absolute bottom-0 right-0 rounded-full" onClick={() => fileInputRef.current?.click()}> <Camera className="h-4 w-4" /> </Button> </>)}
             </div>
             <div className="flex-1 text-center sm:text-left">

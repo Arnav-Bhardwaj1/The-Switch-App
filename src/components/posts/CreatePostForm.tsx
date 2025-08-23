@@ -359,7 +359,7 @@ import { Loader2, Send } from 'lucide-react';
 type Gender = "male" | "female" | "trans" | "other" | "common";
 
 interface CreatePostFormProps {
-  onPostCreated?: (post: any) => void;
+  onPostCreated?: (post: { _id: string; text: string; photo?: string; video?: string; topics: string[]; tags: string[]; space: string; author: { _id: string; name: string; username: string; profileImage?: string; }; createdAt: string; }) => void;
 }
 
 export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
@@ -438,8 +438,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
       resetForm();
       onPostCreated?.(newPost);
 
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create post.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

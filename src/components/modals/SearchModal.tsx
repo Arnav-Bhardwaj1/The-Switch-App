@@ -10,10 +10,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Search as SearchIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type UserSearchResult = {
   _id: string;

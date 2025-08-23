@@ -96,7 +96,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Post } from '@/models/Post';
 import { User } from '@/models/User';
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET handler remains the same
-export async function GET(request: NextRequest) {
+export async function GET() {
   await connectToDB();
   try {
     const posts = await Post.find({})

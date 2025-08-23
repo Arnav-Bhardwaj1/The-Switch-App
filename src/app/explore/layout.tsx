@@ -106,7 +106,7 @@
 
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/authOptions";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Home, User, MessageCircle, LogOut } from 'lucide-react';

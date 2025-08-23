@@ -384,8 +384,9 @@ export default function SignupPage() {
       } else {
         toast.error(data.error || '❌ Something went wrong.');
       }
-    } catch (err: any) {
-      toast.error(err.message || '⚠️ Network error.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '⚠️ Network error.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
       setUploadProgress(0);
@@ -412,8 +413,9 @@ export default function SignupPage() {
         } else {
             toast.error(data.error || 'Verification failed.');
         }
-    } catch (err: any) {
-        toast.error(err.message || '⚠️ Network error.');
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '⚠️ Network error.';
+        toast.error(errorMessage);
     } finally {
         setLoading(false);
     }

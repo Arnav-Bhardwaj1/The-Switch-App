@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Heart, MessageCircle, Share2, Bookmark, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import Image from "next/image";
 
 // --- TYPE INTERFACES ---
 
@@ -32,9 +33,12 @@ interface DetailedPost {
   text: string;
   photo?: string;
   video?: string;
+  topics: string[];
+  tags: string[];
   likes: string[];
   savedBy: string[];
   comments: Comment[];
+  createdAt: string;
 }
 
 interface PostDetailModalProps {
@@ -42,7 +46,7 @@ interface PostDetailModalProps {
   startIndex: number;
   isOpen: boolean;
   onClose: () => void;
-  onPostUpdate: (updatedPost: any) => void;
+  onPostUpdate: (updatedPost: DetailedPost) => void;
   readOnly?: boolean;
 }
 
@@ -74,11 +78,11 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
 
   if (!isOpen || !currentPost) return null;
 
-  const currentUserId = (session?.user as any)?.id;
+  const currentUserId = (session?.user as { id?: string })?.id;
   const isLiked = currentUserId ? currentPost.likes.includes(currentUserId) : false;
   const isSaved = currentUserId ? currentPost.savedBy?.includes(currentUserId) : false;
 
-  const optimisticUpdate = (action: 'like' | 'save' | 'comment', payload?: any) => {
+  const optimisticUpdate = (action: 'like' | 'save' | 'comment', payload?: Comment) => {
     const updatedPost = { ...currentPost };
     switch (action) {
       case 'like':
@@ -93,7 +97,9 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
         break;
       case 'comment':
         // This defensive check prevents the app from crashing
-        updatedPost.comments = [...(currentPost.comments || []), payload];
+        if (payload) {
+          updatedPost.comments = [...(currentPost.comments || []), payload];
+        }
         break;
     }
     onPostUpdate(updatedPost);
@@ -106,7 +112,7 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
     try {
       const res = await fetch(`/api/posts/${currentPost._id}/like`, { method: 'POST' });
        if (!res.ok) throw new Error("Server failed to process like.");
-    } catch (error) {
+    } catch  {
       toast.error("Failed to update like.");
       optimisticUpdate('like'); // Revert on error
     }
@@ -119,7 +125,7 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
     try {
       const res = await fetch(`/api/posts/${currentPost._id}/save`, { method: 'POST' });
       if (!res.ok) throw new Error("Server failed to process save.");
-    } catch (error) {
+    } catch  {
       toast.error("Failed to update save.");
       optimisticUpdate('save'); // Revert on error
     }
@@ -181,7 +187,14 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
         
         {hasMedia && (
           <div className="bg-black flex items-center justify-center overflow-hidden md:rounded-l-lg">
-            {currentPost.photo && <img src={currentPost.photo} alt="Post" className="object-contain max-h-full max-w-full" />}
+<div className="relative w-[600px] h-[400px]">
+  <Image
+    src={currentPost.photo}
+    alt="Post"
+    fill
+    className="object-contain"
+  />
+</div>
             {currentPost.video && <video src={currentPost.video} controls className="object-contain max-h-full max-w-full" />}
           </div>
         )}

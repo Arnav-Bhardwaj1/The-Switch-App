@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import {
   Card,
   CardContent,
@@ -18,10 +18,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PostDetailModal } from '@/components/posts/PostDetailModal';
 import { toast } from "sonner";
 import { Book, Code, Heart, MessageCircle, Share2, Palette, Film, DollarSign, BarChart2, Plane, Camera, UserPlus, Loader2, Image as ImageIcon, Video, FileText, Filter } from 'lucide-react';
-import { Mars, Venus, NonBinary } from "lucide-react";
-import { cn } from "@/lib/utils";
+// import { Mars, Venus, NonBinary } from "lucide-react";
+import Image from "next/image";
+// import { cn } from "@/lib/utils";
 // --- TYPE DEFINITIONS ---
-import { Globe } from "lucide-react";
+// import { Globe } from "lucide-react";
 type Gender = "male" | "female" | "trans" | "other" | "common";
 type Zone = Gender | "others";
 interface Author { _id: string; name: string; username: string; profileImage?: string; gender: Gender; }
@@ -127,7 +128,7 @@ export default function DashboardClient({ session }: DashboardClientProps) {
     }
   };
 
-  const handlePostUpdate = (updatedPost: any) => {
+  const handlePostUpdate = (updatedPost: Post) => {
     setAllPosts(currentPosts =>
       currentPosts.map(p => p._id === updatedPost._id ? updatedPost : p)
     );
@@ -145,7 +146,7 @@ export default function DashboardClient({ session }: DashboardClientProps) {
     try {
       const res = await fetch(`/api/posts/${post._id}/like`, { method: 'POST' });
       if (!res.ok) throw new Error("Server failed to process like.");
-    } catch (error) {
+    } catch  {
       handlePostUpdate(post);
       toast.error("Failed to update like.");
     }
@@ -158,17 +159,17 @@ export default function DashboardClient({ session }: DashboardClientProps) {
       const res = await fetch(`/api/users/${userIdToFollow}/follow`, { method: 'POST' });
       if (!res.ok) throw new Error("Failed to follow user.");
       toast.success("User followed!");
-    } catch (error) {
+    } catch  {
       toast.error("Could not follow user. Please try again.");
       setSuggestedUsers(originalSuggestions);
     }
   };
-  const genderIcon =
-    userGender === "male"
-      ? <Mars className="h-6 w-6" />
-      : userGender === "female"
-      ? <Venus className="h-6 w-6" />
-      : <NonBinary className="h-6 w-6" />;
+  // const genderIcon =
+  //   userGender === "male"
+  //     ? <Mars className="h-6 w-6" />
+  //     : userGender === "female"
+  //     ? <Venus className="h-6 w-6" />
+  //     : <NonBinary className="h-6 w-6" />;
 
 
   return (
@@ -359,8 +360,15 @@ const PostCard = ({ post, currentUserId, onCardClick, onLikeClick, readOnly = fa
           </div>
         </div>
         <p className="text-gray-800 my-4">{post.text}</p>
-        {post.photo && <img src={post.photo} alt="Post content" className="rounded-lg mb-3 max-h-[60vh] w-full object-contain bg-gray-100" />}
-        {post.video && <video src={post.video} className="rounded-lg mb-3 max-h-[60vh] w-full object-contain bg-gray-100" playsInline controls />}
+{post.photo && (
+  <Image
+    src={post.photo}
+    alt="Post content"
+    width={800} // Adjust to expected image size
+    height={600}
+    className="rounded-lg mb-3 max-h-[60vh] w-full object-contain bg-gray-100"
+  />
+)}        {post.video && <video src={post.video} className="rounded-lg mb-3 max-h-[60vh] w-full object-contain bg-gray-100" playsInline controls />}
         <div className="flex flex-wrap gap-2">
           {(post.tags || []).map(tag => <Badge key={tag} variant="secondary" className="capitalize"># {tag}</Badge>)}
         </div>
