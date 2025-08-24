@@ -310,7 +310,7 @@ export default function DashboardClient({ session }: DashboardClientProps) {
         startIndex={modalState.startIndex}
         isOpen={modalState.isOpen}
         onClose={() => setModalState({ ...modalState, isOpen: false })}
-        onPostUpdate={handlePostUpdate}
+        onPostUpdate={handlePostUpdate as never}
         readOnly={activeZone === 'others'}
       />
 

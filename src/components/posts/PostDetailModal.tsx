@@ -60,8 +60,8 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
   const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [newComment, setNewComment] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
-  
-  const currentPost = posts[currentIndex]; 
+
+  const currentPost = posts[currentIndex];
   const hasMedia = !!(currentPost?.photo || currentPost?.video);
 
   useEffect(() => {
@@ -83,7 +83,9 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
   const isSaved = currentUserId ? currentPost.savedBy?.includes(currentUserId) : false;
 
   const optimisticUpdate = (action: 'like' | 'save' | 'comment', payload?: Comment) => {
-    const updatedPost = { ...currentPost };
+    // const updatedPost = { ...currentPost };
+    const updatedPost: DetailedPost = { ...currentPost }; // ensure type
+
     switch (action) {
       case 'like':
         updatedPost.likes = isLiked
@@ -111,13 +113,13 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
     optimisticUpdate('like');
     try {
       const res = await fetch(`/api/posts/${currentPost._id}/like`, { method: 'POST' });
-       if (!res.ok) throw new Error("Server failed to process like.");
-    } catch  {
+      if (!res.ok) throw new Error("Server failed to process like.");
+    } catch {
       toast.error("Failed to update like.");
       optimisticUpdate('like'); // Revert on error
     }
   };
-  
+
   const handleSave = async () => {
     if (!session) { toast.error("Please log in to save posts."); return; }
     if (readOnly) { return; }
@@ -125,7 +127,7 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
     try {
       const res = await fetch(`/api/posts/${currentPost._id}/save`, { method: 'POST' });
       if (!res.ok) throw new Error("Server failed to process save.");
-    } catch  {
+    } catch {
       toast.error("Failed to update save.");
       optimisticUpdate('save'); // Revert on error
     }
@@ -184,21 +186,29 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
         <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-20 text-white md:text-black bg-black/20 md:bg-transparent hover:bg-black/40" onClick={onClose}><X /></Button>
         {currentIndex > 0 && <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 z-20 text-white bg-black/20 hover:bg-black/40" onClick={goToPrev}><ChevronLeft /></Button>}
         {currentIndex < posts.length - 1 && <Button variant="ghost" size="icon" className="absolute right-2 md:right-[50%] md:mr-2 top-1/2 -translate-y-1/2 z-20 text-white bg-black/20 hover:bg-black/40" onClick={goToNext}><ChevronRight /></Button>}
-        
+
         {hasMedia && (
           <div className="bg-black flex items-center justify-center overflow-hidden md:rounded-l-lg">
-<div className="relative w-[600px] h-[400px]">
-  <Image
-    src={currentPost.photo}
-    alt="Post"
-    fill
-    className="object-contain"
-  />
-</div>
-            {currentPost.video && <video src={currentPost.video} controls className="object-contain max-h-full max-w-full" />}
+            <div className="relative w-[600px] h-[400px]">
+              {currentPost.photo && (
+                <Image
+                  src={currentPost.photo}
+                  alt="Post"
+                  fill
+                  className="object-contain"
+                />
+              )}
+              {currentPost.video && (
+                <video
+                  src={currentPost.video}
+                  controls
+                  className="object-contain max-h-full max-w-full"
+                />
+              )}
+            </div>
           </div>
         )}
-        
+
         <div className={`flex flex-col p-4 bg-white ${hasMedia ? 'md:rounded-r-lg' : 'rounded-lg'}`}>
           <div className="flex items-center gap-3 border-b pb-4">
             <Avatar><AvatarImage src={readOnly ? undefined : currentPost.author?.profileImage} /><AvatarFallback>{readOnly ? 'A' : (currentPost.author?.name ? currentPost.author.name[0].toUpperCase() : 'U')}</AvatarFallback></Avatar>
@@ -212,7 +222,7 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
               )}
             </div>
           </div>
-          
+
           <div ref={commentListRef} className="flex-1 py-4 overflow-y-auto space-y-4">
             {currentPost.text && (
               <div className="text-sm">
@@ -259,10 +269,10 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
             </div>
             <p className="text-sm font-semibold px-2 mt-1">{currentPost.likes.length} likes</p>
             <form onSubmit={handleComment} className="flex gap-2 mt-2 px-2">
-               <Input ref={commentInputRef} placeholder="Add a comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)} disabled={isCommenting || readOnly}/>
-               <Button type="submit" disabled={readOnly || isCommenting || !newComment.trim()}>
-                 {isCommenting ? <Loader2 className="w-4 h-4 animate-spin"/> : "Post"}
-               </Button>
+              <Input ref={commentInputRef} placeholder="Add a comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)} disabled={isCommenting || readOnly} />
+              <Button type="submit" disabled={readOnly || isCommenting || !newComment.trim()}>
+                {isCommenting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Post"}
+              </Button>
             </form>
           </div>
         </div>

@@ -116,7 +116,7 @@ export async function POST(
 
     const newComment = new Comment({
       post: postId, // use unwrapped value
-      author: session.user.id,
+      author: session.user?.id,
       text,
     });
     await newComment.save();

@@ -675,7 +675,19 @@ import Image from "next/image";
 // --- TYPE INTERFACES ---
 interface Author { _id: string; name: string; username: string; profileImage?: string; }
 interface Comment { _id: string; author: Author; text: string; createdAt: string; }
-interface Post { _id: string; text: string; photo?: string; video?: string; createdAt: string; author: Author; likes: string[]; savedBy: string[]; comments: Comment[]; }
+interface Post {
+  _id: string;
+  text: string;
+  photo?: string;
+  video?: string;
+  createdAt: string;
+  author?: Author; // <-- FIX: Make this property optional
+  likes: string[];
+  savedBy: string[];
+  comments: Comment[];
+  topics?: string[];
+  tags?: string[];
+}
 interface ProfileUser { _id: string; name: string; username: string; email: string; bio: string; profileImage: string; interests: string[]; posts: Post[]; followers: { _id: string; name: string; username: string; profileImage?: string; }[]; following: { _id: string; name: string; username: string; profileImage?: string; }[]; }
 
 // --- HELPER COMPONENT for rendering individual posts in the grid ---
@@ -716,7 +728,8 @@ const PostCard = ({ post, onClick }: { post: Post, onClick: () => void }) => {
 };
 
 // --- MAIN DYNAMIC PROFILE PAGE COMPONENT ---
-export default function ProfilePage({ params }: { params: { username: string } }) {
+export default function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  // const { username: paramUsername } = React.use(params);
   const { data: session, status: sessionStatus, update } = useSession();
   
   const [profile, setProfile] = useState<ProfileUser | null>(null);
@@ -802,7 +815,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
         const newFollowing = isCurrentlyFollowing
             ? prev.following.filter(u => u._id !== targetUserId)
             : [...prev.following, { _id: targetUserId, name: 'temp', username: 'temp' }]; // Add a temporary object for optimistic update
-        return { ...prev, following: newFollowing as any };
+        return { ...prev, following: newFollowing };
     });
     if(source === 'profile') setIsFollowing(!isFollowing);
 
@@ -964,22 +977,29 @@ export default function ProfilePage({ params }: { params: { username: string } }
           </div>
         </Tabs>
       </div>
+
+      
       
       {profile && (
-         <PostDetailModal
-            posts={filteredPosts}
-            startIndex={selectedPostIndex}
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onPostUpdate={handlePostUpdate}
-          />
-      )}
+  <PostDetailModal
+    posts={filteredPosts.map(post => ({
+      ...post,
+      topics: post.topics || [],
+      tags: post.tags || [],
+    }))}
+    startIndex={selectedPostIndex}
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    onPostUpdate={handlePostUpdate}
+  />
+)}
+
       {modalContent && (
         <FollowListModal
           isOpen={!!modalContent}
           onClose={() => setModalContent(null)}
           title={modalContent.title}
-          users={modal.users}
+          users={modalContent.users}
           currentUserId={session?.user?.id}
           sessionUserFollowing={sessionUserProfile?.following.map(u => u._id) || []}
           onFollowToggle={(userId) => handleFollowToggle(userId, 'modal')}

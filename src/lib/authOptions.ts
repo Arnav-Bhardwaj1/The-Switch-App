@@ -45,7 +45,11 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.gender = token.gender as string;
+        // Type guard for gender
+        const allowedGenders = ["male", "female", "other"];
+        session.user.gender = allowedGenders.includes(token.gender as string)
+          ? (token.gender as "male" | "female" | "other")
+          : undefined;
         session.user.username = token.username as string;
       }
       return session;

@@ -235,7 +235,7 @@
 //                 disabled={loading}
 //               />
 //             </div>
-            
+
 //             {loading && uploadProgress > 0 && (
 //               <Progress value={uploadProgress} className="w-full" />
 //             )}
@@ -359,12 +359,13 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      let uploadedUrl = '';
+      let uploadedUrl: string = '';
       if (file) {
-        uploadedUrl = await handleUpload();
-        if (!uploadedUrl) {
+        const result = await handleUpload();
+        if (!result) {
           throw new Error('Image upload failed, please try again.');
         }
+        uploadedUrl = result; // Now TypeScript knows this is a string
       }
 
       const res = await fetch('/api/signup', {
@@ -375,7 +376,7 @@ export default function SignupPage() {
           profileImage: uploadedUrl || '',
         }),
       });
-      
+
       const data = await res.json();
 
       if (res.status === 201) {
@@ -392,32 +393,32 @@ export default function SignupPage() {
       setUploadProgress(0);
     }
   };
-  
+
   // --- OTP Verification Handler ---
   const handleOtpVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-        const res = await fetch('/api/verify-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: form.email, otp }),
-        });
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, otp }),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (res.ok) {
-            toast.success('✅ Email verified! Redirecting to login...');
-            setTimeout(() => router.push('/auth/login'), 1500);
-        } else {
-            toast.error(data.error || 'Verification failed.');
-        }
+      if (res.ok) {
+        toast.success('✅ Email verified! Redirecting to login...');
+        setTimeout(() => router.push('/auth/login'), 1500);
+      } else {
+        toast.error(data.error || 'Verification failed.');
+      }
     } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : '⚠️ Network error.';
-        toast.error(errorMessage);
+      const errorMessage = err instanceof Error ? err.message : '⚠️ Network error.';
+      toast.error(errorMessage);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   }
 
@@ -489,7 +490,7 @@ export default function SignupPage() {
             </form>
           ) : (
             <form onSubmit={handleOtpVerification} className="space-y-4">
-               <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-muted-foreground">
                 An OTP has been sent to <strong>{form.email}</strong>. Please enter it below.
               </p>
               <div className="grid gap-1">

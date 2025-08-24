@@ -182,7 +182,7 @@
 
 // export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
 //   const { data: session } = useSession();
-  
+
 //   // --- STATE ---
 //   const [text, setText] = useState('');
 //   const [topics, setTopics] = useState('');
@@ -284,7 +284,7 @@
 //             rows={4}
 //             disabled={isSubmitting}
 //           />
-          
+
 //           {/* ✅ 3. Add UI for selecting the post space */}
 //           {availableSpaces.length > 1 && (
 //             <div>
@@ -364,7 +364,7 @@ interface CreatePostFormProps {
 
 export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const { data: session } = useSession();
-  
+
   const [text, setText] = useState('');
   const [topics, setTopics] = useState('');
   const [tags, setTags] = useState('');
@@ -373,7 +373,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const [space, setSpace] = useState<Gender>('common');
 
   const userGender = session?.user?.gender as Gender;
-  const availableSpaces = 
+  const availableSpaces =
     userGender && userGender !== 'common' && userGender !== 'other'
       ? ['common', userGender]
       : ['common'];
@@ -408,10 +408,28 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
     setIsSubmitting(true);
     try {
       const mediaData = { photo: '', video: '' };
+      // if (file) {
+      //   const { url, fileType } = await handleUpload();
+      //   if (fileType === 'photo') mediaData.photo = url;
+      //   else mediaData.video = url;
+      // }
+
       if (file) {
         const { url, fileType } = await handleUpload();
-        if (fileType === 'photo') mediaData.photo = url;
-        else mediaData.video = url;
+
+        // --- FIX STARTS HERE ---
+        // Check if the upload was successful and returned a URL
+        if (url) {
+          if (fileType === 'photo') {
+            mediaData.photo = url;
+          } else {
+            mediaData.video = url;
+          }
+        } else {
+          // If the upload failed, stop the submission and inform the user
+          throw new Error('File upload failed. Please try again.');
+        }
+        // --- FIX ENDS HERE ---
       }
 
       const body = {
@@ -431,7 +449,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to create post.');
-      } 
+      }
 
       const newPost = await res.json();
       toast.success(`Post created in '${space}' space!`);
@@ -460,7 +478,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
             rows={4}
             disabled={isSubmitting}
           />
-          
+
           {availableSpaces.length > 1 && (
             <div>
               <Label>Choose a Space</Label>
