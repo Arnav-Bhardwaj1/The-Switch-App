@@ -27,7 +27,7 @@ type Gender = "male" | "female" | "trans" | "other" | "common";
 type Zone = Gender | "others";
 interface Author { _id: string; name: string; username: string; profileImage?: string; gender: Gender; }
 interface Comment { _id: string; author: Author; text: string; createdAt: string; }
-interface Post { _id: string; author: Author; text: string; photo?: string; video?: string; topics: string[]; tags: string[]; likes: string[]; comments: Comment[]; savedBy: string[]; createdAt: string; }
+interface Post { _id: string; author: Author; text: string; photo?: string; video?: string; topics: string[]; space?: string; tags: string[]; likes: string[]; comments: Comment[]; savedBy: string[]; createdAt: string; }
 type Interest = { name: string; icon: React.ReactNode; tag: string; };
 type SuggestedUser = { _id: string; name: string; username: string; profileImage?: string; };
 interface DashboardClientProps { session: { user: { id?: string | null; name?: string | null; email?: string | null; image?: string | null; gender?: Gender; }; }; };
@@ -85,33 +85,59 @@ export default function DashboardClient({ session }: DashboardClientProps) {
     fetchData();
   }, []);
 
+  // const filteredPosts = useMemo(() => {
+  //   let posts = allPosts.filter(p => {
+  //     const authorGender = p.author?.gender || "common";
+  //     let inZone = false;
+  //     if (activeZone === 'common') {
+  //       inZone = true;
+  //     } else if (activeZone === 'others') {
+  //       inZone = (authorGender !== userGender && authorGender !== 'common');
+  //     } else {
+  //       inZone = (authorGender === activeZone || authorGender === 'common');
+  //     }
+  //     return inZone;
+  //   });
+
+  //   if (selectedInterests.length > 0) {
+  //     posts = posts.filter(p =>
+  //       selectedInterests.some(interest => (p.tags || []).includes(interest) || (p.topics || []).includes(interest))
+  //     );
+  //   }
+
+  //   switch (postTypeFilter) {
+  //     case 'photos': return posts.filter(p => !!p.photo);
+  //     case 'videos': return posts.filter(p => !!p.video);
+  //     case 'text': return posts.filter(p => !p.photo && !p.video);
+  //     default: return posts;
+  //   }
+  // }, [activeZone, selectedInterests, postTypeFilter, allPosts, userGender]);
+
   const filteredPosts = useMemo(() => {
-    let posts = allPosts.filter(p => {
-      const authorGender = p.author?.gender || "common";
-      let inZone = false;
-      if (activeZone === 'common') {
-        inZone = true;
-      } else if (activeZone === 'others') {
-        inZone = (authorGender !== userGender && authorGender !== 'common');
-      } else {
-        inZone = (authorGender === activeZone || authorGender === 'common');
-      }
-      return inZone;
-    });
-
-    if (selectedInterests.length > 0) {
-      posts = posts.filter(p =>
-        selectedInterests.some(interest => (p.tags || []).includes(interest) || (p.topics || []).includes(interest))
-      );
+  let posts = allPosts.filter(p => {
+    if (activeZone === 'common') {
+      return p.space === 'common';
+    } else if (activeZone === 'others') {
+      return p.space !== userGender && p.space !== 'common';
+    } else {
+      // Only show posts with space === activeZone (e.g., "male")
+      return p.space === userGender;
     }
+  });
 
-    switch (postTypeFilter) {
-      case 'photos': return posts.filter(p => !!p.photo);
-      case 'videos': return posts.filter(p => !!p.video);
-      case 'text': return posts.filter(p => !p.photo && !p.video);
-      default: return posts;
-    }
-  }, [activeZone, selectedInterests, postTypeFilter, allPosts, userGender]);
+  if (selectedInterests.length > 0) {
+    posts = posts.filter(p =>
+      selectedInterests.some(interest => (p.tags || []).includes(interest) || (p.topics || []).includes(interest))
+    );
+  }
+
+  switch (postTypeFilter) {
+    case 'photos': return posts.filter(p => !!p.photo);
+    case 'videos': return posts.filter(p => !!p.video);
+    case 'text': return posts.filter(p => !p.photo && !p.video);
+    default: return posts;
+  }
+}, [activeZone, selectedInterests, postTypeFilter, allPosts, userGender]);
 
   const toggleInterest = (interestTag: string) => {
     setSelectedInterests(prev =>
